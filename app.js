@@ -36,4 +36,4 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 })
 
-app.listen(4200)
+app.listen(3000)
