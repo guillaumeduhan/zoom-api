@@ -12,6 +12,10 @@ app.use(
 
 const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY)
 
+app.get('/', (req, res) => {
+  res.send({ hello: 'world' })
+})
+
 app.post('/create-payment-intent', async (req, res) => {
   let { payment_method_types = ['card'], currency = 'eur', amount = 1000 } = req.body
   if (!amount || amount < 500) {
