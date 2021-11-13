@@ -1,21 +1,19 @@
 require("dotenv").config()
 
-const express = require("express")
+const express = require('express')
 const app = express()
-const cors = require("cors")
-app.use(express.json())
-app.use(
-  cors({
-    origin: "http://localhost:3000",
+
+app.get('/', function (req, res) {
+  res.json({
+    "model": "world"
   })
-)
-
-// const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY)
-
-app.get('/', (req, res) => {
-  res.send({ hello: 'world' })
 })
 
+app.listen(3000, function () {
+  console.log('Example app listening on port 3000!')
+})
+
+// const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY)
 // app.post('/create-payment-intent', async (req, res) => {
 //   let { payment_method_types = ['card'], currency = 'eur', amount = 1000 } = req.body
 //   if (!amount || amount < 500) {
@@ -39,5 +37,3 @@ app.get('/', (req, res) => {
 //     })
 //   }
 // })
-
-app.listen(3000)
