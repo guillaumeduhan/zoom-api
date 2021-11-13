@@ -2,6 +2,7 @@ require("dotenv").config()
 
 const express = require('express')
 const app = express()
+const PORT = process.env.PORT || 5000
 
 app.get('/', function (req, res) {
   res.json({
@@ -9,9 +10,7 @@ app.get('/', function (req, res) {
   })
 })
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-})
+app.listen(PORT)
 
 // const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY)
 // app.post('/create-payment-intent', async (req, res) => {
