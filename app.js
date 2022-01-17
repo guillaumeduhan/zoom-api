@@ -5,9 +5,11 @@ const fs = require('fs');
 const cors = require('cors')
 const axios = require('axios')
 const schedule = require('node-schedule');
+const bodyParser = require('body-parser')
+const crypto = require('crypto')
 
-const PORT = process.env.PORT || 4000
-let redirect_uri = 'http://localhost:4000/callback'
+const PORT = process.env.PORT || 4200
+let redirect_uri = process.env.NODE_ENV === 'production' ? 'https://zoom.koachub.app/callback' : 'http://localhost:4200/callback'
 let zoomUrl = 'https://api.zoom.us/v2/users/'
 
 const headers = {
@@ -15,7 +17,8 @@ const headers = {
   'Content-type': "application/x-www-form-urlencoded"
 }
 
-app.use(cors());
+app.use(bodyParser.json(), cors())
+app.options('*', cors());
 app.use(express.json());
 
 /**
@@ -25,16 +28,51 @@ app.use(express.json());
 app.get('/', function (req, res) {
   let rawdata = fs.readFileSync('tokens.json');
   let tokensSaved = JSON.parse(rawdata);
-  res.json(tokensSaved)
+  // res.json(tokensSaved)
+  res.send({
+    status: 200,
+    message: 'Tokens generated.'
+  })
+})
+
+app.post('/signature', (req, res) => {
+  const timestamp = new Date().getTime() - 30000
+  const msg = Buffer.from(process.env.ZOOM_JWT_API_KEY + req.body.meetingNumber + timestamp + req.body.role).toString('base64')
+  const hash = crypto.createHmac('sha256', process.env.ZOOM_JWT_API_SECRET).update(msg).digest('base64')
+  const signature = Buffer.from(`${process.env.ZOOM_JWT_API_KEY}.${req.body.meetingNumber}.${timestamp}.${req.body.role}.${hash}`).toString('base64')
+
+  res.json({
+    signature: signature
+  })
 })
 
 app.get('/callback', async (req, res) => {
-  await askToken(req.query.code);
-  await res.json(200)
+  await askToken(req.query.code)
+    .then(() => {
+      res.send({
+        status: 200,
+        message: 'Tokens generated.'
+      })
+      res.send(200)
+    })
+    .catch((err) => {
+      res.send({
+        status: 400,
+        message: 'Error on callback',
+        error: err
+      })
+      res.send(400)
+    })
 })
 
 app.post('/createMeeting', async (req, res) => {
   let rawdata = await fs.readFileSync('tokens.json');
+  if (!rawdata) {
+    res.send({
+      status: 400,
+      message: 'Cannot get authentication tokens.'
+    })
+  }
   let tokensSaved = JSON.parse(rawdata);
 
   await axios.post(`${zoomUrl}me/meetings`, req.body, {
